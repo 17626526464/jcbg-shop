@@ -5,4 +5,4 @@ tmp/
 .vscode/*
 .env
 images/*
-temp/caches/*
+temp/*
