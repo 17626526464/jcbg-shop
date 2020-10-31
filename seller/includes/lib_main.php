@@ -589,8 +589,7 @@ function set_filter($filter, $sql, $param_str = '')
 
 	setcookie('ECSCP[lastfilterfile]', sprintf('%X', crc32($filterfile)), time() + 600);
 	setcookie('ECSCP[lastfilter]', urlencode(serialize($filter)), time() + 600);
-	//setcookie('ECSCP[lastfiltersql]', base64_encode($sql), time() + 600);
-	set_local_cookie('ECSCP.lastfiltersql', base64_encode($sql));
+	setcookie('ECSCP[lastfiltersql]', base64_encode($sql), time() + 600);
 }
 
 function get_filter($param_str = '')
@@ -607,27 +606,6 @@ function get_filter($param_str = '')
 	else {
 		return false;
 	}
-}
-
-function set_local_cookie($key, $data)
-{
-	$filename = $_SERVER[DOCUMENT_ROOT] . "/temp/local_cookie/" . $key . "_local_cookie.cookie";
-	$handle = fopen($filename, "w+");
-	fwrite($handle, "$data");
-	fclose($handle);
-}
-
-function get_local_cookie($key)
-{
-	$filename = $_SERVER[DOCUMENT_ROOT] . "/temp/local_cookie/" . $key . "_local_cookie.cookie";
-	$data = file_get_contents($filename);
-	return $data;
-}
-
-function dd($var){
-	echo "<pre>";
-	var_dump($var);
-	die();
 }
 
 function sanitize_url($url)
