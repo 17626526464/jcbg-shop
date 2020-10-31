@@ -360,9 +360,15 @@ else if ($_REQUEST['act'] == 'insert') {
 	$sql = 'SELECT nav_list FROM ' . $ecs->table('admin_user') . ' WHERE action_list = \'all\'';
 	$row = $db->getRow($sql);
 	$admin_id = get_admin_id();
-	$sql = 'INSERT INTO ' . $ecs->table('admin_user') . ' (user_name, email, password, add_time, nav_list, action_list, role_id, parent_id, rs_id) ' . 'VALUES (\'' . trim($_POST['user_name']) . '\', \'' . trim($_POST['email']) . ('\', \'' . $password . '\', \'' . $add_time . '\', \'' . $row['nav_list'] . '\', \'' . $action_list . '\', \'' . $role_id . '\', \'' . $admin_id . '\', \'' . $adminru['rs_id'] . '\')');
+	$is_partner_manager = trim($_POST['is_partner_manager']);
+	$sql = 'INSERT INTO ' . $ecs->table('admin_user') . ' (user_name, email, password, add_time, nav_list, action_list, role_id, parent_id, rs_id ,is_partner_manager) ' . 'VALUES (\'' . trim($_POST['user_name']) . '\', \'' . trim($_POST['email']) . ('\', \'' . $password . '\', \'' . $add_time . '\', \'' . $row['nav_list'] . '\', \'' . $action_list . '\', \'' . $role_id . '\', \'' . $admin_id . '\', \'' . $adminru['rs_id'] . '\', \'' . $is_partner_manager . '\')');
 	$db->query($sql);
 	$new_id = $db->Insert_ID();
+	// 加入合伙公司管理员表
+	if ($is_partner_manager == 1) {
+		$partner_manager_insert_sql = 'INSERT INTO ' . $ecs->table('partner_manager') . ' (admin_user_id) ' . 'VALUES ( \'' . $new_id . '\')';
+		$db->query($partner_manager_insert_sql);
+	}
 	$link[0]['text'] = $_LANG['go_allot_priv'];
 	$link[0]['href'] = 'privilege.php?act=allot&id=' . $new_id . '&user=' . $_POST['user_name'] . '';
 	$link[1]['text'] = $_LANG['continue_add'];

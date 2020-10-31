@@ -94,7 +94,24 @@
                                         </div>
                                     </div>
                                 </div>
-								{/if}								
+								{/if}
+
+                                <div class="item">
+                                    <div class="label">{$lang.select_partner_manager}：</div>
+                                    <div class="label_value">
+                                        <div class="checkbox_items">
+                                            <div class="checkbox_item">
+                                                <input type="radio" class="ui-radio" name="is_partner_manager" id="is_partner_manager_0" value="0" {if $list.is_partner_manager neq 0} checked="true" {/if} />
+                                                <label for="is_partner_manager_0" class="ui-radio-label">{$lang.no}</label>
+                                            </div>
+                                            <div class="checkbox_item">
+                                                <input type="radio" class="ui-radio" name="is_partner_manager" id="is_partner_manager_1" value="1" {if $list.is_partner_manager neq 1} checked="true"  {/if} />
+                                                <label for="is_partner_manager_1" class="ui-radio-label">{$lang.yes}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="item">
                                     <div class="label">&nbsp;</div>
                                     <div class="label_value info_btn">
