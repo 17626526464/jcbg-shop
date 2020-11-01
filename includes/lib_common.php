@@ -7675,5 +7675,19 @@ if (!function_exists('array_combine')) {
 		return $combined;
 	}
 }
+function dd($value){
+	echo "<pre>";
+	var_dump($value);
+	exit;
+}
 
+function is_partner_manager()
+{
+
+	$admin_id = intval($_SESSION['admin_id']);
+	$sql = 'SELECT u.is_partner_manager FROM ' . $GLOBALS['ecs']->table('admin_user') . ' u
+            WHERE u.user_id = \'' . $admin_id . '\'';
+	$admin_info = $GLOBALS['db']->getRow($sql);
+	return $admin_info['is_partner_manager'];
+}
 ?>

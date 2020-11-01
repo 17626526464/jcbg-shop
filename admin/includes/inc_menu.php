@@ -232,14 +232,18 @@ if ($_CFG['region_store_enabled']) {
 		unset($modules['04_order']['08_add_order']);
 	}
 }
-
-$menu_top['home'] = '00_home';
-$menu_top['menuplatform'] = '05_banner,07_content,08_members,10_priv_admin,01_system,13_backup,16_email_manage,12_template,19_self_support';
-$menu_top['menushopping'] = '02_cat_and_goods,02_promotion,04_order,09_crowdfunding,15_rec,17_merchants,18_batch_manage,03_goods_storage,supply_and_demand,18_region_store';
-$menu_top['suppliers'] = '18_suppliers,19_suppliers_goods,20_suppliers_promotion,21_suppliers_order,22_suppliers_stats';
-$menu_top['finance'] = '06_stats,31_fund,32_bill';
-$menu_top['third_party'] = '24_sms,25_file,26_login,27_interface';
-$menu_top['ectouch'] = '20_ectouch,22_wechat,23_drp,24_wxapp';
+if (is_partner_manager()) {
+	$menu_top['partner_home'] = '00_partner_home';
+	$modules['00_partner_home']['01_partner_goods'] = 'index.php?act=novice_guide';
+} else {
+	$menu_top['home'] = '00_home';
+	$menu_top['menuplatform'] = '05_banner,07_content,08_members,10_priv_admin,01_system,13_backup,16_email_manage,12_template,19_self_support';
+	$menu_top['menushopping'] = '02_cat_and_goods,02_promotion,04_order,09_crowdfunding,15_rec,17_merchants,18_batch_manage,03_goods_storage,supply_and_demand,18_region_store';
+	$menu_top['suppliers'] = '18_suppliers,19_suppliers_goods,20_suppliers_promotion,21_suppliers_order,22_suppliers_stats';
+	$menu_top['finance'] = '06_stats,31_fund,32_bill';
+	$menu_top['third_party'] = '24_sms,25_file,26_login,27_interface';
+	$menu_top['ectouch'] = '20_ectouch,22_wechat,23_drp,24_wxapp';
+}
 
 if (judge_supplier_enabled()) {
 	$modules['18_suppliers']['01_suppliers_list'] = 'suppliers.php?act=list';
