@@ -234,7 +234,8 @@ if ($_CFG['region_store_enabled']) {
 }
 if (is_partner_manager()) {
 	$menu_top['partner_home'] = '00_partner_home';
-	$modules['00_partner_home']['01_partner_goods'] = 'index.php?act=novice_guide';
+	$modules['00_partner_home']['01_platform_goods'] = 'partner.php?act=platform_goods_list';
+	$modules['00_partner_home']['02_partner_goods'] = 'partner.php?act=goods_list';
 } else {
 	$menu_top['home'] = '00_home';
 	$menu_top['menuplatform'] = '05_banner,07_content,08_members,10_priv_admin,01_system,13_backup,16_email_manage,12_template,19_self_support';

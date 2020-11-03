@@ -1,0 +1,76 @@
+<!--高级搜索 start-->
+<form action="javascript:searchGoods()" name="searchHighForm">
+<div class="gj_search">
+	<div class="search-gao-list" id="searchBarOpen">
+		<i class="icon icon-zoom-in"></i>{$lang.advanced_search}
+	</div>
+	<div class="search-gao-bar" style="right:-350px;">
+		<div class="handle-btn" id="searchBarClose"><i class="icon icon-zoom-out"></i>{$lang.pack_up}</div>
+		<div class="title"><h3>{$lang.advanced_search}</h3></div>
+        <div class="searchContent w300">
+            <div class="layout-box">
+                {if $smarty.get.act neq "trash"}
+                <dl class="w300">
+                    <dt>{$lang.category}</dt>
+                    <dd>
+                        <div class="categorySelect">
+                            <div class="selection">
+                                <input type="text" name="category_name" id="category_name" class="text w260 mr0 valid" value="{$lang.select_cat}" autocomplete="off" readonly data-filter="cat_name" autocomplete="off" />
+                                <input type="hidden" name="cat_id" id="cat_id" value="0" data-filter="cat_id" autocomplete="off" />
+                            </div>
+                            <div class="select-container" style="width:290px; display:none;">
+                                {include file="library/filter_category.lbi"}
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+
+                {/if}
+
+                <dl class="w300">
+                    <dt>{$lang.brand}</dt>
+                    <dd>
+                        <div class="brandSelect">
+                            <div class="selection">
+                                <input type="text" name="brand_name" id="brand_name" class="text w120 valid" {$lang.select_barnd} autocomplete="off" readonly data-filter="brand_name" />
+                                <input type="hidden" name="brand_id" id="brand_id" value="0" data-filter="brand_id" />
+                            </div>
+                            <div class="brand-select-container" style="display:none;">
+                                {include file="library/filter_brand.lbi"}
+                            </div>
+                        </div>												
+                    </dd>
+                </dl>
+                <dl class="w140">
+                    <dt>{$lang.keyword}</dt>
+                    <dd>
+                        <input type="text" name="keyword" size="15" class="text w270 mr0" autocomplete="off" />						
+                    </dd>
+                </dl>				
+            </div>
+        </div>
+        <div class="bot_btn">
+            <input type="submit" class="btn red_btn" name="tj_search" value="{$lang.button_inquire}" />
+            <input type="reset" class="btn btn_reset" name="reset" value="{$lang.button_reset}" />
+        </div>
+	</div>
+</div>
+</form>
+<!--高级搜索 end-->	
+
+{literal}
+<script type="text/javascript">
+    $.gjSearch("-350px");
+    function searchGoods() {
+        listTable.filter['cat_id'] = document.forms['searchHighForm'].elements['cat_id'].value;
+        listTable.filter['brand_id'] = document.forms['searchHighForm'].elements['brand_id'].value;
+        listTable.filter['keyword'] = Utils.trim(document.forms['searchHighForm'].elements['keyword'].value);
+        // 品牌搜索  -qin
+        if (document.forms['searchHighForm'].elements['brand_keyword']) {
+            listTable.filter['brand_keyword'] = Utils.trim(document.forms['searchHighForm'].elements['brand_keyword'].value);
+        }
+        listTable.filter['page'] = 1;
+        listTable.loadList();
+    }
+</script>
+{/literal}
