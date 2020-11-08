@@ -63,7 +63,7 @@
                                     <td class="handle">
                                         <div class="tDiv a4">
                                             <a href="privilege.php?act=partner_config&id={$list.user_id}&user={$list.user_name}" title="{$lang.allot_priv}" class="btn_region"><i class="icon icon-cog"></i>{$lang.partner_config}</a>
-                                            <a href="partner.php?act=partner_allot_goods&id={$list.user_id}&user={$list.user_name}" title="{$lang.allot_priv}" class="btn_region"><i class="icon icon-cog"></i>{$lang.partner_allot_goods}</a>
+                                            <a href="partner.php?act=partner_platform_goods&id={$list.user_id}&user={$list.user_name}" title="{$lang.allot_priv}" class="btn_region"><i class="icon icon-cog"></i>{$lang.partner_allot_goods}</a>
                                             <a href="privilege.php?act=allot&id={$list.user_id}&user={$list.user_name}" title="{$lang.allot_priv}" class="btn_region"><i class="icon icon-cog"></i>{$lang.allot_priv}</a>
                                             <a href="admin_logs.php?act=list&id={$list.user_id}" title="{$lang.view_log}" class="btn_see"><i class="sc_icon sc_icon_see"></i>{$lang.view_log}</a>
                                             <a href="privilege.php?act=edit&id={$list.user_id}" title="{$lang.edit}" class="btn_edit"><i class="icon icon-edit"></i>{$lang.edit}</a>

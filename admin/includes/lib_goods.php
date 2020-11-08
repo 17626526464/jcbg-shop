@@ -984,6 +984,249 @@ function goods_list($is_delete = 0, $real_goods = 1, $conditions = '', $review_s
 	return array('goods' => $row, 'filter' => $filter, 'page_count' => $filter['page_count'], 'record_count' => $filter['record_count']);
 }
 
+function partner_allocated_goods_list($is_delete = 0, $real_goods = 1, $conditions = '', $review_status = 0, $real_division = 0, $join = []){
+	$adminru = get_admin_ru_id();
+	$param_str = '-' . $is_delete . '-' . $real_goods . '-' . $review_status;
+	$result = get_filter($param_str);
+
+	if ($result === false) {
+		$day = getdate();
+		$today = local_mktime(23, 59, 59, $day['mon'], $day['mday'], $day['year']);
+		$filter['cat_id'] = empty($_REQUEST['cat_id']) ? 0 : intval($_REQUEST['cat_id']);
+		$filter['intro_type'] = empty($_REQUEST['intro_type']) ? '' : trim($_REQUEST['intro_type']);
+		$filter['is_promote'] = empty($_REQUEST['is_promote']) ? 0 : intval($_REQUEST['is_promote']);
+		$filter['stock_warning'] = empty($_REQUEST['stock_warning']) ? 0 : intval($_REQUEST['stock_warning']);
+		$filter['cat_type'] = isset($_REQUEST['cat_type']) && empty($_REQUEST['cat_type']) ? '' : addslashes($_REQUEST['cat_type']);
+		$filter['brand_id'] = empty($_REQUEST['brand_id']) ? 0 : intval($_REQUEST['brand_id']);
+		$filter['brand_keyword'] = empty($_REQUEST['brand_keyword']) ? '' : trim($_REQUEST['brand_keyword']);
+		$filter['keyword'] = empty($_REQUEST['keyword']) ? '' : trim($_REQUEST['keyword']);
+		$filter['suppliers_id'] = isset($_REQUEST['suppliers_id']) ? (empty($_REQUEST['suppliers_id']) ? '' : trim($_REQUEST['suppliers_id'])) : '';
+		$filter['seller_list'] = isset($_REQUEST['seller_list']) && !empty($_REQUEST['seller_list']) ? 1 : 0;
+		$filter['warn_number'] = empty($_REQUEST['warn_number']) ? '' : intval($_REQUEST['warn_number']);
+		$filter['rs_id'] = empty($_REQUEST['rs_id']) ? 0 : intval($_REQUEST['rs_id']);
+
+		if (0 < $adminru['rs_id']) {
+			$filter['rs_id'] = $adminru['rs_id'];
+		}
+
+		if (isset($_REQUEST['is_ajax']) && $_REQUEST['is_ajax'] == 1) {
+			$filter['keyword'] = json_str_iconv($filter['keyword']);
+		}
+
+		if (isset($_REQUEST['review_status'])) {
+			$filter['review_status'] = empty($_REQUEST['review_status']) ? 0 : intval($_REQUEST['review_status']);
+		}
+		else {
+			$filter['review_status'] = $review_status;
+		}
+
+		$filter['sort_by'] = empty($_REQUEST['sort_by']) ? 'g.goods_id' : trim($_REQUEST['sort_by']);
+		$filter['sort_order'] = empty($_REQUEST['sort_order']) ? 'DESC' : trim($_REQUEST['sort_order']);
+		$filter['extension_code'] = empty($_REQUEST['extension_code']) ? '' : trim($_REQUEST['extension_code']);
+		$filter['is_delete'] = $is_delete;
+		$filter['real_goods'] = $real_goods;
+		$where = 1;
+
+		if ($filter['cat_type'] == 'seller') {
+			if (0 < $filter['cat_id']) {
+				$cats = get_children($filter['cat_id'], 0, 0, 'merchants_category', 'g.user_cat');
+				$where .= ' AND (' . $cats . ')';
+			}
+		}
+
+		if ($filter['brand_keyword']) {
+			$filter['brand_id'] = $GLOBALS['db']->getAll('SELECT GROUP_CONCAT(brand_id) AS brand_id FROM ' . $GLOBALS['ecs']->table('brand') . (' WHERE brand_name LIKE \'%' . $brand_keyword . '%\' '));
+			$where .= ' AND (g.brand_id = \'' . db_create_in($filter['brand_id']) . '\')';
+		}
+
+		if ($filter['brand_id']) {
+			$where .= ' AND (g.brand_id = \'' . $filter['brand_id'] . '\')';
+		}
+
+		if ($filter['warn_number']) {
+			$where .= ' AND goods_number <= warn_number ';
+		}
+
+		if (isset($_REQUEST['is_on_sale']) && $_REQUEST['is_on_sale'] != -1) {
+			$filter['is_on_sale'] = !empty($_REQUEST['is_on_sale']) ? $_REQUEST['is_on_sale'] : 0;
+			$where .= ' AND (g.is_on_sale = \'' . $filter['is_on_sale'] . '\')';
+		}
+
+		$filter['store_search'] = empty($_REQUEST['store_search']) ? 0 : intval($_REQUEST['store_search']);
+		$filter['merchant_id'] = isset($_REQUEST['merchant_id']) ? intval($_REQUEST['merchant_id']) : 0;
+		$filter['store_keyword'] = isset($_REQUEST['store_keyword']) ? trim($_REQUEST['store_keyword']) : '';
+		$store_where = '';
+		$store_search_where = '';
+
+		if ($filter['store_search'] != 0) {
+			if ($adminru['ru_id'] == 0) {
+				if ($_REQUEST['store_type']) {
+					$store_search_where = 'AND msi.shopNameSuffix = \'' . $_REQUEST['store_type'] . '\'';
+				}
+
+				if ($filter['store_search'] == 1) {
+					$where .= ' AND g.user_id = \'' . $filter['merchant_id'] . '\' ';
+				}
+				else if ($filter['store_search'] == 2) {
+					$store_where .= ' AND msi.rz_shopName LIKE \'%' . mysql_like_quote($filter['store_keyword']) . '%\'';
+				}
+				else if ($filter['store_search'] == 3) {
+					$store_where .= ' AND msi.shoprz_brandName LIKE \'%' . mysql_like_quote($filter['store_keyword']) . '%\' ' . $store_search_where;
+				}
+
+				if (1 < $filter['store_search'] && $filter['store_search'] != 4) {
+					$where .= ' AND (SELECT msi.user_id FROM ' . $GLOBALS['ecs']->table('merchants_shop_information') . ' as msi ' . (' WHERE msi.user_id = g.user_id ' . $store_where . ') > 0 ');
+				}
+				else if ($filter['store_search'] == 4) {
+					$where .= ' AND g.user_id = 0';
+				}
+			}
+		}
+
+		switch ($filter['intro_type']) {
+			case 'is_best':
+				$where .= ' AND g.is_best=1';
+				break;
+
+			case 'is_hot':
+				$where .= ' AND g.is_hot=1';
+				break;
+
+			case 'is_new':
+				$where .= ' AND g.is_new=1';
+				break;
+
+			case 'is_promote':
+				$where .= ' AND g.is_promote = 1 AND g.promote_price > 0 ';
+				break;
+
+			case 'all_type':
+				$where .= ' AND (g.is_best=1 OR g.is_hot=1 OR g.is_new=1 OR (g.is_promote = 1 AND g.promote_price > 0 AND g.promote_start_date <= \'' . $today . '\' AND g.promote_end_date >= \'' . $today . '\'))';
+		}
+
+		$where .= get_rs_null_where('g.user_id', $filter['rs_id']);
+
+		if ($filter['stock_warning']) {
+			$where .= ' AND g.goods_number <= g.warn_number ';
+		}
+
+		if ($filter['extension_code']) {
+			$where .= ' AND g.extension_code=\'' . $filter['extension_code'] . '\'';
+		}
+
+		if (!empty($filter['keyword'])) {
+			$where .= ' AND (g.goods_sn LIKE \'%' . mysql_like_quote($filter['keyword']) . '%\' OR g.goods_name LIKE \'%' . mysql_like_quote($filter['keyword']) . '%\' OR g.bar_code LIKE \'%' . mysql_like_quote($filter['keyword']) . '%\'' . ')';
+		}
+
+		if (-1 < $real_goods && $real_division == 0) {
+			$where .= ' AND g.is_real=\'' . $real_goods . '\'';
+		}
+
+		if (!empty($filter['suppliers_id'])) {
+			$where .= ' AND (g.suppliers_id = \'' . $filter['suppliers_id'] . '\')';
+		}
+
+		if (0 < $filter['review_status']) {
+			if ($filter['review_status'] == 3) {
+				$where .= ' AND (g.review_status >= \'' . $filter['review_status'] . '\')';
+			}
+			else {
+				$where .= ' AND (g.review_status = \'' . $filter['review_status'] . '\')';
+			}
+		}
+		else {
+			$where .= ' AND (g.review_status > 0)';
+		}
+
+		$where .= $conditions;
+
+		if ($_REQUEST['self'] == 1) {
+			$where .= ' AND g.user_id = 0 ';
+			$filter['self'] = 1;
+		}
+		else if ($_REQUEST['merchants'] == 1) {
+			$where .= ' AND g.user_id > 0 ';
+			$filter['merchants'] = 1;
+		}
+
+		if ($filter['cat_type'] != 'seller' && $filter['cat_id']) {
+			$cat_keys = get_array_keys_cat($filter['cat_id']);
+			$cat_keys = $cat_keys ? array_merge($cat_keys, array($filter['cat_id'])) : $filter['cat_id'];
+			$sql = 'SELECT goods_id FROM ' . $GLOBALS['ecs']->table('goods_cat') . ' WHERE cat_id ' . db_create_in($cat_keys);
+			$extension_goods_array = $GLOBALS['db']->getCol($sql);
+			$extension_goods_array = $extension_goods_array ? array_unique($extension_goods_array) : array();
+
+			if ($extension_goods_array) {
+				$where .= ' AND (g.cat_id ' . db_create_in($cat_keys) . ' OR g.goods_id ' . db_create_in($extension_goods_array) . ')';
+			}
+			else {
+				$where .= ' AND g.cat_id ' . db_create_in($cat_keys);
+			}
+		}
+
+		if ($filter['seller_list']) {
+			$where .= ' AND g.user_id > 0 ';
+		}
+		else {
+			$where .= ' AND g.user_id = 0 ';
+		}
+
+		$sql = 'SELECT COUNT(*) FROM ' . $GLOBALS['ecs']->table('partner_goods_config') . ' AS PartnerGoodsConfig LEFT JOIN ' . $GLOBALS['ecs']->table('goods') . ' AS g ON PartnerGoodsConfig.goods_id =  g.goods_id' . (' WHERE ' . $where . ' AND g.is_delete = \'' . $is_delete . '\'');
+		$filter['record_count'] = $GLOBALS['db']->getOne($sql);
+		$filter = page_and_size($filter);
+		$select = '';
+
+		if (file_exists(MOBILE_DRP)) {
+			$select .= ', g.is_distribution';
+		}
+
+		$sql = 'SELECT PartnerGoodsConfig.price as exclusive_price,g.goods_id,g.goods_thumb, g.goods_name, g.user_id, g.brand_id, g.goods_type, g.goods_sn, g.shop_price,g.sales_volume, g.sales_volume_base, ' . 'g.is_on_sale, g.is_best, g.is_new, g.is_hot, g.sort_order, g.goods_number, g.integral, g.commission_rate, ' . 'g.is_promote, g.model_price, g.model_inventory, g.model_attr, g.review_status, g.review_content, g.store_best, ' . 'g.store_new , g.store_hot , g.is_real, g.is_shipping, g.stages, g.goods_thumb, ' . 'g.is_alone_sale, g.is_xiangou, g.promote_end_date, g.xiangou_end_date, g.bar_code, g.freight, g.tid ' . $select . ' FROM ' . $GLOBALS['ecs']->table('partner_goods_config') . ' AS PartnerGoodsConfig LEFT JOIN ' . $GLOBALS['ecs']->table('goods') . ' AS g ON PartnerGoodsConfig.goods_id =  g.goods_id' . (' WHERE  ' . $where . ' AND g.is_delete = \'' . $is_delete . '\' ') . (' ORDER BY ' . $filter['sort_by'] . ' ' . $filter['sort_order'] . ' ') . ' LIMIT ' . $filter['start'] . (',' . $filter['page_size']);
+		$filter['keyword'] = stripslashes($filter['keyword']);
+		set_filter($filter, $sql, $param_str);
+	}
+	else {
+		$sql = $result['sql'];
+		$filter = $result['filter'];
+	}
+
+	$row = $GLOBALS['db']->getAll($sql);
+	$count = count($row);
+
+	for ($i = 0; $i < $count; $i++) {
+		$row[$i]['user_name'] = get_shop_name($row[$i]['user_id'], 1);
+		$brand = get_goods_brand_info($row[$i]['brand_id']);
+		$row[$i]['brand_name'] = $brand['brand_name'];
+		$row[$i]['is_attr'] = 0;
+
+		if ($row[$i]['goods_type'] == 0) {
+			$sql = 'DELETE FROM ' . $GLOBALS['ecs']->table('products') . ' WHERE goods_id = \'' . $row[$i]['goods_id'] . '\'';
+			$GLOBALS['db']->query($sql);
+			$sql = 'DELETE FROM ' . $GLOBALS['ecs']->table('products_area') . ' WHERE goods_id = \'' . $row[$i]['goods_id'] . '\'';
+			$GLOBALS['db']->query($sql);
+			$sql = 'DELETE FROM ' . $GLOBALS['ecs']->table('products_warehouse') . ' WHERE goods_id = \'' . $row[$i]['goods_id'] . '\'';
+			$GLOBALS['db']->query($sql);
+			$sql = 'DELETE FROM ' . $GLOBALS['ecs']->table('goods_attr') . ' WHERE goods_id = \'' . $row[$i]['goods_id'] . '\'';
+			$GLOBALS['db']->query($sql);
+		}
+		else {
+			$sql = 'SELECT ga.goods_attr_id FROM ' . $GLOBALS['ecs']->table('goods_attr') . ' AS ga,' . $GLOBALS['ecs']->table('attribute') . ' AS a' . ' WHERE ga.goods_id = \'' . $row[$i]['goods_id'] . '\' AND ga.attr_id = a.attr_id AND a.attr_type <> 0';
+
+			if ($GLOBALS['db']->getOne($sql, true)) {
+				$row[$i]['is_attr'] = 1;
+			}
+		}
+
+		if ($row[$i]['freight'] == 2) {
+			$row[$i]['transport'] = get_goods_transport_info($row[$i]['tid']);
+		}
+
+		$row[$i]['goods_thumb'] = get_image_path($row[$i]['goods_id'], $row[$i]['goods_thumb'], true);
+		$row[$i]['goods_extend'] = get_goods_extend($row[$i]['goods_id']);
+	}
+
+	return array('goods' => $row, 'filter' => $filter, 'page_count' => $filter['page_count'], 'record_count' => $filter['record_count']);
+}
+
 function check_goods_product_exist($goods_id, $conditions = '')
 {
 	if (empty($goods_id)) {
