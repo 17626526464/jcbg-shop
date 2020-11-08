@@ -323,6 +323,55 @@ else if ($_REQUEST['act'] == 'partner_list') {
 	assign_query_info();
 	$smarty->display('privilege_partner_list.dwt');
 }
+else if ($_REQUEST['act'] == 'partner_config') {
+	admin_priv('admin_manage');
+	$admin_user_id = $_REQUEST['id'] ?: null;
+	if (empty($admin_user_id)) {
+		$link[] = array('text' => $_LANG['go_back'], 'href' => 'javascript:history.back(-1)');
+		sys_msg($_LANG['illegal_operate'], 1, $link);
+	}
+	$partner_manager_info = get_partner_manager_info($admin_user_id);
+
+	if (empty($partner_manager_info['PartnerCompany']['id'])) {
+		$link[] = array('text' => $_LANG['go_back'], 'href' => 'javascript:history.back(-1)');
+		sys_msg($_LANG['partner_not_joined_company'], 1, $link);
+	}
+
+	$partner_company_config = get_partner_company_config($partner_manager_info['PartnerCompany']['id']);
+
+	if (!empty($_POST['user_name'])) {
+		$link[] = array('text' => $_LANG['go_back'], 'href' => 'javascript:history.back(-1)');
+		$_POST['manager_audited'] = trim($_POST['manager_audited']);
+
+		if ($_POST['manager_audited'] != 0 && $_POST['manager_audited'] != 1) {
+			sys_msg($_LANG['partner_manager_audited'] . $_LANG['edit_fail'], 1, $link);
+		}
+		$_POST['not_payment'] = trim($_POST['not_payment']);
+		if ($_POST['not_payment'] != 0 && $_POST['not_payment'] != 1) {
+			sys_msg($_LANG['partner_goods_not_payment'] . $_LANG['edit_fail'], 1, $link);
+		}
+
+		if ($_POST['partner_company_config_id']) {
+			$sql = 'UPDATE ' . $ecs->table('partner_company_config') . ' SET ' . ('manager_audited = \'' . $_POST['manager_audited'] . '\', ') . ('not_payment = \'' . $_POST['not_payment'] . '\', ') . ('updated = \'' . date('Y-m-d:H:i:s', time()) . '\' ') . ('WHERE partner_company_id = \'' . $_POST['partner_company_config_id'] . '\'');
+
+		} else {
+			$sql = 'INSERT INTO ' . $ecs->table('partner_company_config') . ' (partner_company_id, manager_audited, not_payment, created, updated) ' . '
+					VALUES (\'' . trim($partner_manager_info['PartnerCompany']['id']) . ('\', \'' . $_POST['manager_audited'] . '\', \'' . $_POST['not_payment'] . '\', \'' . date('Y-m-d:H:i:s', time()) . '\', \'' . date('Y-m-d:H:i:s', time()) . '\')');
+		}
+		if ($db->query($sql)) {
+			sys_msg($_LANG['action_succeed'], 0, $link);
+		} else {
+			sys_msg($_LANG['edit_fail'], 1, $link);
+		}
+
+	}
+
+
+	$smarty->assign('ur_here', $_LANG['partner_config']);
+	$smarty->assign('partner_manager_info', $partner_manager_info);
+	$smarty->assign('partner_company_config', $partner_company_config);
+	$smarty->display('privilege_partner_config.dwt');
+}
 else if ($_REQUEST['act'] == 'query') {
 	$admin_list = get_admin_userlist($adminru['ru_id']);
 	$smarty->assign('admin_list', $admin_list['list']);
@@ -391,7 +440,11 @@ else if ($_REQUEST['act'] == 'insert') {
 		$db->query($partner_manager_insert_sql);
 	}
 	$link[0]['text'] = $_LANG['go_allot_priv'];
-	$link[0]['href'] = 'privilege.php?act=allot&id=' . $new_id . '&user=' . $_POST['user_name'] . '';
+	if($is_partner_manager){
+		$link[0]['href'] = 'privilege.php?act=partner_list&id=' . $new_id . '&user=' . $_POST['user_name'] . '';
+	}else{
+		$link[0]['href'] = 'privilege.php?act=allot&id=' . $new_id . '&user=' . $_POST['user_name'] . '';
+	}
 	$link[1]['text'] = $_LANG['continue_add'];
 	$link[1]['href'] = 'privilege.php?act=add';
 	sys_msg($_LANG['add'] . '&nbsp;' . $_POST['user_name'] . '&nbsp;' . $_LANG['action_succeed'], 0, $link);
@@ -774,6 +827,8 @@ else {
 		check_authz_json('admin_drop');
 		$id = intval($_GET['id']);
 		$admin_name = $db->getOne('SELECT user_name FROM ' . $ecs->table('admin_user') . (' WHERE user_id=\'' . $id . '\''));
+		$partner_manager_info = get_partner_manager_info($id);
+
 
 		if ($admin_name == 'demo') {
 			make_json_error($_LANG['edit_remove_cannot']);
@@ -789,6 +844,9 @@ else {
 
 		if ($exc->drop($id)) {
 			$sess->delete_spec_admin_session($id);
+			$db->query('DELETE FROM ' . $ecs->table('partner_manager') . (' WHERE admin_user_id=\'' . $partner_manager_info['AdminUser']['user_id'] . '\''));
+			$db->query('DELETE FROM ' . $ecs->table('partner_company') . (' WHERE id=\'' . $partner_manager_info['PartnerCompany']['id'] . '\''));
+			$db->query('DELETE FROM ' . $ecs->table('partner_company_config') . (' WHERE partner_company_id=\'' . $partner_manager_info['PartnerCompany']['id'] . '\''));
 			admin_log(addslashes($admin_name), 'remove', 'privilege');
 			clear_cache_files();
 		}

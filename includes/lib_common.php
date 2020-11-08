@@ -7681,6 +7681,48 @@ function dd($value){
 	exit;
 }
 
+function get_partner_manager_info($admin_user_id)
+{
+	$partner_manager_info = [];
+	$sql = 'SELECT *
+			FROM ' . $GLOBALS['ecs']->table('admin_user') . ' AdminUser 
+			LEFT JOIN ' . $GLOBALS['ecs']->table('partner_manager') . ' PartnerManager ON AdminUser.user_id = PartnerManager.admin_user_id
+			LEFT JOIN ' . $GLOBALS['ecs']->table('partner_company') . ' PartnerCompany ON PartnerManager.company_id = PartnerCompany.id
+			WHERE AdminUser.user_id = \'' . $admin_user_id . '\'';
+	$row = $GLOBALS['db']->getRow($sql);
+	if (!empty($row)) {
+		$partner_manager_info['AdminUser']['user_id'] = $row['user_id'];
+		$partner_manager_info['AdminUser']['user_name'] = $row['user_name'];
+		$partner_manager_info['AdminUser']['parent_id'] = $row['parent_id'];
+		$partner_manager_info['AdminUser']['ru_id'] = $row['ru_id'];
+		$partner_manager_info['AdminUser']['rs_id'] = $row['rs_id'];
+		$partner_manager_info['AdminUser']['email'] = $row['email'];
+		$partner_manager_info['AdminUser']['add_time'] = $row['add_time'];
+		$partner_manager_info['AdminUser']['is_partner_manager'] = $row['is_partner_manager'];
+		$partner_manager_info['PartnerManager']['admin_user_id'] = $row['admin_user_id'];
+		$partner_manager_info['PartnerManager']['real_name'] = $row['real_name'];
+		$partner_manager_info['PartnerManager']['mobile'] = $row['mobile'];
+		$partner_manager_info['PartnerManager']['id_card'] = $row['id_card'];
+		$partner_manager_info['PartnerManager']['company_id'] = $row['company_id'];
+		$partner_manager_info['PartnerCompany']['id'] = $row['id'];
+		$partner_manager_info['PartnerCompany']['company_name'] = $row['company_name'];
+		$partner_manager_info['PartnerCompany']['address'] = $row['address'];
+		$partner_manager_info['PartnerCompany']['telephone'] = $row['telephone'];
+		$partner_manager_info['PartnerCompany']['set_up_time'] = $row['set_up_time'];
+		$partner_manager_info['PartnerCompany']['business_passport_no'] = $row['business_passport_no'];
+		$partner_manager_info['PartnerCompany']['created'] = $row['created'];
+	}
+	return $partner_manager_info;
+}
+
+function get_partner_company_config($company_id)
+{
+	$sql = 'SELECT *
+			FROM ' . $GLOBALS['ecs']->table('partner_company_config') . ' WHERE partner_company_id = \'' . $company_id . '\'';
+	$partner_company_config = $GLOBALS['db']->getRow($sql);
+	return $partner_company_config ?: [];
+}
+
 function is_partner_manager()
 {
 
