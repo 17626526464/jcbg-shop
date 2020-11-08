@@ -98,6 +98,7 @@ $_LANG['admin_title'] = '登录页';
 $_LANG['management_center'] = '管理中心';
 $_LANG['administrator'] = '管理员';
 $_LANG['jurisdiction'] = '权限';
+$_LANG['partner'] = '合伙';
 $_LANG['business_admin'] = '商城管理员';
 $_LANG['operation_prompt_content']['allot'][0] = '该页面展示商城所有功能权限。';
 $_LANG['operation_prompt_content']['allot'][1] = '打钩即是分配权限，请谨慎操作。';

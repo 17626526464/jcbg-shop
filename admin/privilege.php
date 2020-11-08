@@ -20,8 +20,12 @@ function get_admin_userlist($ru_id)
 				$filter['page_size'] = 15;
 			}
 		}
+		$filter['is_partner_manager'] = empty($_REQUEST['is_partner_manager']) ? 0 : trim($_REQUEST['is_partner_manager']);
 
 		$where = '';
+		if (isset($filter['is_partner_manager'])) {
+			$where .= ' AND is_partner_manager = ' . $filter['is_partner_manager'];
+		}
 
 		if ($filter['keywords']) {
 			$where .= ' AND (user_name LIKE \'%' . mysql_like_quote($filter['keywords']) . '%\')';
@@ -99,6 +103,7 @@ function get_admin_userlist($ru_id)
 		$list[$key]['last_login'] = local_date($GLOBALS['_CFG']['time_format'], $val['last_login']);
 
 		if ($val['agency_id']) {
+			$list[$key]['agency'] = get_agency_user($val['agency_id']);
 			$list[$key]['agency'] = get_agency_user($val['agency_id']);
 		}
 
@@ -301,6 +306,22 @@ else if ($_REQUEST['act'] == 'list') {
 	$smarty->assign('page_count', $admin_list['page_count']);
 	assign_query_info();
 	$smarty->display('privilege_list.dwt');
+}
+else if ($_REQUEST['act'] == 'partner_list') {
+	$smarty->assign('ur_here', $_LANG['01_partner_admin_list']);
+	$smarty->assign('action_link', array('href' => 'privilege.php?act=add', 'text' => $_LANG['admin_add']));
+	$smarty->assign('full_page', 1);
+	$store_list = get_common_store_list();
+	$smarty->assign('store_list', $store_list);
+	$_REQUEST['is_partner_manager'] = 1;
+	$admin_list = get_admin_userlist($adminru['ru_id']);
+
+	$smarty->assign('admin_list', $admin_list['list']);
+	$smarty->assign('filter', $admin_list['filter']);
+	$smarty->assign('record_count', $admin_list['record_count']);
+	$smarty->assign('page_count', $admin_list['page_count']);
+	assign_query_info();
+	$smarty->display('privilege_partner_list.dwt');
 }
 else if ($_REQUEST['act'] == 'query') {
 	$admin_list = get_admin_userlist($adminru['ru_id']);
