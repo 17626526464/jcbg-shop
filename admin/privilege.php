@@ -847,6 +847,7 @@ else {
 			$db->query('DELETE FROM ' . $ecs->table('partner_manager') . (' WHERE admin_user_id=\'' . $partner_manager_info['AdminUser']['user_id'] . '\''));
 			$db->query('DELETE FROM ' . $ecs->table('partner_company') . (' WHERE id=\'' . $partner_manager_info['PartnerCompany']['id'] . '\''));
 			$db->query('DELETE FROM ' . $ecs->table('partner_company_config') . (' WHERE partner_company_id=\'' . $partner_manager_info['PartnerCompany']['id'] . '\''));
+			$db->query('DELETE FROM ' . $ecs->table('partner_goods_config') . (' WHERE company_id=\'' . $partner_manager_info['PartnerCompany']['id'] . '\''));
 			admin_log(addslashes($admin_name), 'remove', 'privilege');
 			clear_cache_files();
 		}
