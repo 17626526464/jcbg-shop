@@ -1,15 +1,15 @@
 <?php
 // database host
-$db_host   = "172.17.0.2:3306";
+$db_host   = "139.224.25.101:3306";
 
 // database name
-$db_name   = "jcbg_shop";
+$db_name   = "www_jcbg_com";
 
 // database username
-$db_user   = "root";
+$db_user   = "www_jcbg_com";
 
 // database password
-$db_pass   = "123456";
+$db_pass   = "zHXLtXdFrp4ZZEeZ";
 
 // table prefix
 $prefix    = "dsc_";
